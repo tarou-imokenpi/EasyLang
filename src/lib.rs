@@ -7,7 +7,7 @@ pub enum Token {
     Identifier(String),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Symbol {
     Plus,
     Minus,
@@ -69,7 +69,7 @@ pub enum ReservedWord {
 
 #[derive(Debug)]
 pub enum NumberType {
-    Integer(usize),
+    Integer(i64),
     Float(f64),
 }
 
@@ -85,7 +85,6 @@ pub struct Tokenizer {
     current_index: usize,
     current_char: char,
     max_index: usize,
-    pub original: String,
     pub token: Vec<Token>,
 }
 
@@ -94,15 +93,13 @@ impl TokenizerTrait for Tokenizer {
         let text: Vec<char> = code.chars().collect();
         let current_index = 0;
         let max_index = text.len() - 1;
-        let original = code.to_string();
-        let current_char = text[current_index];
         let token: Vec<Token> = Vec::new();
+        let current_char = text[current_index];
         Self {
             text,
             current_index,
             current_char,
             max_index,
-            original,
             token,
         }
     }
