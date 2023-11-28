@@ -4,6 +4,7 @@ pub enum Token {
     Symbol(Symbol),
     Number(NumberType),
     String(String),
+    Identifier(String),
 }
 
 #[derive(Debug)]
@@ -72,14 +73,14 @@ pub enum NumberType {
     Float(f64),
 }
 
-pub trait LexerTrait {
+pub trait TokenizerTrait {
     fn new(code: &str) -> Self;
     fn next(&mut self);
     fn create_number(&mut self);
     fn create_token(&mut self);
 }
 
-pub struct Lexer {
+pub struct Tokenizer {
     pub text: Vec<char>,
     current_index: usize,
     current_char: char,
@@ -88,7 +89,7 @@ pub struct Lexer {
     pub token: Vec<Token>,
 }
 
-impl LexerTrait for Lexer {
+impl TokenizerTrait for Tokenizer {
     fn new(code: &str) -> Self {
         let text: Vec<char> = code.chars().collect();
         let current_index = 0;
@@ -233,7 +234,7 @@ impl LexerTrait for Lexer {
                 } {
                     self.token.push(Token::Reserved(reserved));
                 } else {
-                    self.token.push(Token::Symbol(Symbol::OriginalName));
+                    self.token.push(Token::Identifier(identifier));
                 }
             }
         }
