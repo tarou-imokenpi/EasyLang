@@ -1,17 +1,33 @@
-use fast_lang::*;
-use std::{collections::binary_heap::Iter, env, fs};
+use std::{env, fs};
+use Easy_lang::*;
 
 fn main() {
-    let mut lexer = Lexer::new(read_file().as_str());
+    let mut lexer = Tokenizer::new(read_file().as_str());
     lexer.create_token();
-    println!("{:?}", lexer.token);
-    // let mut tokens_iterator = lexer.token.iter();
 
-    // while tokens_iterator.next().is_some() {
-    //     let next_token = tokens_iterator.next().unwrap();
-    //     todo!()
-    // }
+    println!("{:?}", lexer.token);
 }
+
+pub enum Node {
+    Expression(Box<Expression>),
+    InfixExpression(Box<InfixExpression>),
+}
+
+pub struct IntegerLiteral {
+    pub value: i64,
+}
+
+pub struct Expression {
+    pub node: Node,
+}
+
+pub struct InfixExpression {
+    pub left: Box<Expression>,
+    pub right: Box<Expression>,
+    pub operator: Symbol,
+}
+
+fn parse_expression(lexer: &mut Tokenizer) -> Expression {}
 
 fn read_file() -> String {
     let args: Vec<String> = env::args().collect();
@@ -24,8 +40,4 @@ fn read_file() -> String {
     {
         panic!("No file path provided");
     }
-}
-
-fn check_next_token(next_token: &Token) {
-    todo!()
 }
