@@ -1,70 +1,14 @@
-use std::{env, fs, slice::Iter};
+use std::{env, fs};
 use Easy_lang::*;
 
 fn main() {
     let mut tokenizer = Tokenizer::new(read_file().as_str());
     tokenizer.create_token();
 
-    let mut token_iterator: Iter<'_, Token> = tokenizer.token.iter();
-    let parsed_express = parse_expression(&mut token_iterator);
-    println!("{:?}", tokenizer.token);
-    println!("{:?}", parsed_express);
-}
+    println!("{:?}", &tokenizer.token);
 
-#[derive(Debug)]
-pub enum Node {
-    Expression(Box<Expression>),
-    InfixExpression(Box<InfixExpression>),
-    IntegerLiteral(Box<NumberLiteral>),
-}
-#[derive(Debug)]
-pub struct NumberLiteral {
-    pub value: i64,
-}
-
-#[derive(Debug)]
-pub struct Expression {
-    pub node: Node,
-}
-
-// 中置演算子の構造体
-#[derive(Debug)]
-pub struct InfixExpression {
-    pub left: Box<Expression>,
-    pub right: Box<Expression>,
-    pub operator: Symbol,
-}
-
-// iteratorを使う
-fn parse_expression(token_iter: &mut Iter<'_, Token>) -> Expression {
-    // どう繰り返すか
-    match token_iter.next() {
-        Some(token) => match token {
-            Token::Number(number) => Expression {
-                node: Node::IntegerLiteral(Box::new(NumberLiteral {
-                    value: match number {
-                        NumberType::Integer(value) => *value,
-                        NumberType::Float(value) => *value as i64,
-                    },
-                })),
-            },
-            Token::Symbol(symbol) => {
-                let left = parse_expression(token_iter);
-                let right = parse_expression(token_iter);
-                Expression {
-                    node: Node::InfixExpression(Box::new(InfixExpression {
-                        left: Box::new(left),
-                        right: Box::new(right),
-                        operator: symbol.clone(),
-                    })),
-                }
-            }
-            Token::Reserved(_) => todo!(),
-            Token::String(_) => todo!(),
-            Token::Identifier(_) => todo!(),
-        },
-        None => todo!(),
-    }
+    let expr = binary_expr_parse(&tokenizer.token);
+    println!("{:?}", expr);
 }
 
 fn read_file() -> String {
@@ -78,4 +22,115 @@ fn read_file() -> String {
     {
         panic!("No file path provided");
     }
+}
+
+/// 式を表す列挙型
+#[derive(Debug)]
+enum Expression {
+    /// リテラルを表す要素
+    Literal(Literal),
+    /// 2項演算を表す要素
+    BinaryExpr(BinaryExpr),
+    /// 関数呼び出しを表す要素関数名と引数を持ちます。
+    FunctionCall(String, Vec<Expression>),
+}
+
+/// 2項演算子を表す列挙型
+#[derive(Debug)]
+enum BinOperators {
+    /// 加算演算子
+    Add,
+    /// 減算演算子
+    Subtract,
+    /// 乗算演算子
+    Multiply,
+    /// 除算演算子
+    Divide,
+}
+
+/// リテラルを表す列挙型
+#[derive(Debug)]
+enum Literal {
+    /// 整数を表す要素
+    Integer(i64),
+    /// 浮動小数点数を表す要素
+    Float(f64),
+    /// 文字列を表す要素
+    String(String),
+    /// 真偽値を表す要素
+    Boolean(bool),
+}
+
+/// 2項演算式を表す構造体
+#[derive(Debug)]
+struct BinaryExpr {
+    /// 左側の式
+    left: Box<Expression>,
+    /// 右側の式
+    right: Box<Expression>,
+    /// 演算子
+    operator: BinOperators,
+}
+
+// let left = Expression::Literal(Literal::Integer(5));
+// let right = Expression::Literal(Literal::Integer(3));
+// let operator = BinOperators::Add;
+
+// let binary_expr = BinaryExpr {
+//     left: Box::new(left),
+//     right: Box::new(right),
+//     operator,
+// };
+
+// let expr = Expression::BinaryExpr(binary_expr);
+fn binary_expr_parse(token: &[Token]) -> Expression {
+    let mut tokens = token.iter().peekable();
+    let mut expr = match tokens.next() {
+        Some(Token::Literal(LiteralType::Int(n))) => Expression::Literal(Literal::Integer(*n)),
+        Some(Token::Literal(LiteralType::Float(n))) => Expression::Literal(Literal::Float(*n)),
+        _ => panic!("Syntax Error - 連続した演算子です。 数値型を期待しています。"),
+    };
+
+    while let Some(token) = tokens.next() {
+        expr = match token {
+            Token::Symbol(Symbol::Plus) => {
+                let right = match tokens.next() {
+                    Some(Token::Literal(LiteralType::Int(n))) => {
+                        Expression::Literal(Literal::Integer(*n))
+                    }
+                    _ => panic!(
+                        "Syntax Error - 連続した演算子です。 次は数値型を期待しています。\n>> {:?}",
+                        token
+                    ),
+                };
+                Expression::BinaryExpr(BinaryExpr {
+                    left: Box::new(expr),
+                    right: Box::new(right),
+                    operator: BinOperators::Add,
+                })
+            }
+            Token::Symbol(Symbol::Minus) => {
+                let right = match tokens.next() {
+                    Some(Token::Literal(LiteralType::Int(n))) => {
+                        Expression::Literal(Literal::Integer(*n))
+                    }
+                    _ => panic!(
+                        "Syntax Error - 連続した演算子です。 次は数値型を期待しています。\n>> {:?}",
+                        token
+                    ),
+                };
+                Expression::BinaryExpr(BinaryExpr {
+                    left: Box::new(expr),
+                    right: Box::new(right),
+                    operator: BinOperators::Subtract,
+                })
+            }
+            _ => panic!(
+                "この演算子はサポートされていません。\nDebug Message: Error Symbol >> {:?}",
+                token
+            ),
+        };
+    }
+
+    expr
 }
