@@ -2,8 +2,7 @@
 pub enum Token {
     Reserved(ReservedWord),
     Symbol(Symbol),
-    Number(NumberType),
-    String(String),
+    Literal(LiteralType),
     Identifier(String),
 }
 
@@ -68,9 +67,10 @@ pub enum ReservedWord {
 }
 
 #[derive(Debug)]
-pub enum NumberType {
-    Integer(i64),
+pub enum LiteralType {
+    Int(i64),
     Float(f64),
+    String(String),
 }
 
 pub trait TokenizerTrait {
@@ -127,10 +127,10 @@ impl TokenizerTrait for Tokenizer {
                 self.next();
             }
             self.token
-                .push(Token::Number(NumberType::Float(number.parse().unwrap())));
+                .push(Token::Literal(LiteralType::Float(number.parse().unwrap())));
         } else {
             self.token
-                .push(Token::Number(NumberType::Integer(number.parse().unwrap())));
+                .push(Token::Literal(LiteralType::Int(number.parse().unwrap())));
         }
     }
 
@@ -181,7 +181,7 @@ impl TokenizerTrait for Tokenizer {
                         string.push(self.current_char);
                         self.next();
                     }
-                    self.token.push(Token::String(string));
+                    self.token.push(Token::Literal(LiteralType::String(string)));
                     self.next();
                     continue;
                 }
