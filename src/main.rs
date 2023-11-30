@@ -4,23 +4,30 @@ use Easy_lang::*;
 fn main() {
     let mut tokenizer = Tokenizer::new(read_file().as_str());
     tokenizer.create_token();
-
     println!("{:?}", &tokenizer.token);
 
-    let expr = binary_expr_parse(&tokenizer.token);
-    println!("{:?}", expr);
+    // let expr = binary_expr_parse(&tokenizer.token);
+    // println!("{:?}", expr);
+
+    // match expr {
+    //     BinaryExpr => {
+    //         println!("{:?}", Expression::BinaryExpr(left));
+    //         println!("{:?}", right);
+    //         println!("{:?}", operator);
+    //     }
+    // }
 }
 
+/// ファイルを読み込みテキストを返します
 fn read_file() -> String {
     let args: Vec<String> = env::args().collect();
-    if let Some(file_path) = args.get(1) {
-        return fs::read_to_string(file_path)
-            .expect("Should have been able to read the file")
+    match args.get(1) {
+        Some(file_path) => fs::read_to_string(file_path)
+            .expect("ファイルが読めるはずでした。")
             .trim()
-            .to_string();
-    };
-    {
-        panic!("No file path provided");
+            .to_string(),
+
+        None => panic!("ファイルパスが指定されていません"),
     }
 }
 
@@ -72,17 +79,6 @@ struct BinaryExpr {
     operator: BinOperators,
 }
 
-// let left = Expression::Literal(Literal::Integer(5));
-// let right = Expression::Literal(Literal::Integer(3));
-// let operator = BinOperators::Add;
-
-// let binary_expr = BinaryExpr {
-//     left: Box::new(left),
-//     right: Box::new(right),
-//     operator,
-// };
-
-// let expr = Expression::BinaryExpr(binary_expr);
 fn binary_expr_parse(token: &[Token]) -> Expression {
     let mut tokens = token.iter().peekable();
     let mut expr = match tokens.next() {
@@ -92,43 +88,28 @@ fn binary_expr_parse(token: &[Token]) -> Expression {
     };
 
     while let Some(token) = tokens.next() {
-        expr = match token {
-            Token::Symbol(Symbol::Plus) => {
-                let right = match tokens.next() {
-                    Some(Token::Literal(LiteralType::Int(n))) => {
-                        Expression::Literal(Literal::Integer(*n))
-                    }
-                    _ => panic!(
-                        "Syntax Error - 連続した演算子です。 次は数値型を期待しています。\n>> {:?}",
-                        token
-                    ),
-                };
-                Expression::BinaryExpr(BinaryExpr {
-                    left: Box::new(expr),
-                    right: Box::new(right),
-                    operator: BinOperators::Add,
-                })
-            }
-            Token::Symbol(Symbol::Minus) => {
-                let right = match tokens.next() {
-                    Some(Token::Literal(LiteralType::Int(n))) => {
-                        Expression::Literal(Literal::Integer(*n))
-                    }
-                    _ => panic!(
-                        "Syntax Error - 連続した演算子です。 次は数値型を期待しています。\n>> {:?}",
-                        token
-                    ),
-                };
-                Expression::BinaryExpr(BinaryExpr {
-                    left: Box::new(expr),
-                    right: Box::new(right),
-                    operator: BinOperators::Subtract,
-                })
-            }
-            _ => panic!(
-                "この演算子はサポートされていません。\nDebug Message: Error Symbol >> {:?}",
-                token
-            ),
+        let ope = match token {
+            Token::Symbol(Symbol::Plus) => BinOperators::Add,
+            Token::Symbol(Symbol::Minus) => BinOperators::Subtract,
+            Token::Symbol(Symbol::Asterisk) => BinOperators::Multiply,
+            Token::Symbol(Symbol::Slash) => BinOperators::Divide,
+            _ => panic!("未対応の演算子です。"),
+        };
+        expr = {
+            let right = match tokens.next() {
+                Some(Token::Literal(LiteralType::Int(n))) => {
+                    Expression::Literal(Literal::Integer(*n))
+                }
+                _ => panic!(
+                    "Syntax Error - 連続した演算子です。 次は数値型を期待しています。\n>> {:?}",
+                    token
+                ),
+            };
+            Expression::BinaryExpr(BinaryExpr {
+                left: Box::new(expr),
+                right: Box::new(right),
+                operator: ope,
+            })
         };
     }
 
