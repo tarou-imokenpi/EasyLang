@@ -1,11 +1,17 @@
+/// EasyLangプログラミング言語のトークンを表します。
 #[derive(Debug)]
 pub enum Token {
+    /// 予約語トークンを表します。
     Reserved(ReservedWord),
+    /// 記号トークンを表します。
     Symbol(Symbol),
+    /// リテラルトークンを表します。
     Literal(LiteralType),
+    /// 識別子トークンを表します。
     Identifier(String),
 }
 
+/// EasyLangプログラミング言語の記号を表します。
 #[derive(Debug, Clone)]
 pub enum Symbol {
     Plus,
@@ -35,6 +41,7 @@ pub enum Symbol {
     OriginalName,
 }
 
+/// EasyLangプログラミング言語の予約語を表します。
 #[derive(Debug)]
 pub enum ReservedWord {
     If,
@@ -66,10 +73,14 @@ pub enum ReservedWord {
     Super,
 }
 
+/// EasyLangプログラミング言語のリテラルの種類を表します。
 #[derive(Debug)]
 pub enum LiteralType {
+    /// 整数リテラルを表します。
     Int(i64),
+    /// 浮動小数点リテラルを表します。
     Float(f64),
+    /// 文字列リテラルを表します。
     String(String),
 }
 
@@ -216,7 +227,7 @@ impl TokenizerTrait for Tokenizer {
                     "let" => Some(ReservedWord::Let),
                     "const" => Some(ReservedWord::Const),
                     "p" => Some(ReservedWord::Print),
-                    "pl" => Some(ReservedWord::Println),
+                    "print" => Some(ReservedWord::Println),
                     "input" => Some(ReservedWord::Input),
                     "len" => Some(ReservedWord::Len),
                     "type" => Some(ReservedWord::Type),
